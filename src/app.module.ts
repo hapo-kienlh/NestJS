@@ -8,15 +8,17 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { AuthModule } from './auth/auth.module';
+import { ConfigurationModule } from './config/configuration.module';
 @Module({
   imports: [
+    ConfigurationModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: 'Abc@27072002',
-      database: 'vue',
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
@@ -26,14 +28,14 @@ import { AuthModule } from './auth/auth.module';
     }),
     MailerModule.forRoot({
       transport: {
-        service: 'gmail',
+        service: process.env.MAILER_SERVICE,
         auth: {
-          user: 'kien.lh@haposoft.com',
-          pass: 'kiirxbqsejljdxnw',
+          user: process.env.MAILER_USER,
+          pass: process.env.MAILER_PASSWORD,
         },
       },
       defaults: {
-        from: '"👻" <kien.lh@haposoft.com>',
+        from: process.env.MAILER_FROM,
       },
     }),
     MulterConfigModule,
