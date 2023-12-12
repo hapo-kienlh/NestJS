@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/user.entity';
 import { UserRepository } from 'src/users/user.repository';
@@ -28,7 +28,7 @@ export class AuthService {
         return { status: HttpStatus.UNAUTHORIZED, msg: 'Password Failed' };
       }
 
-      const token = jwt.sign({ user }, 'PRIVATE_KEY_GENERATOR_ACCESS_TOKEN', {
+      const token = jwt.sign({ user }, process.env.PRIVATE_KEY_ACCESS_TOKEN, {
         expiresIn: '1h',
       });
 
@@ -47,7 +47,7 @@ export class AuthService {
     try {
       const decoded = jwt.verify(
         accessToken,
-        'PRIVATE_KEY_GENERATOR_ACCESS_TOKEN',
+        process.env.PRIVATE_KEY_ACCESS_TOKEN,
       );
       return decoded;
     } catch (error) {
