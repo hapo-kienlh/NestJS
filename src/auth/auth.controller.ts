@@ -9,14 +9,7 @@ import {
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBody, ApiProperty, ApiTags } from '@nestjs/swagger';
-
-class LoginDto {
-  @ApiProperty()
-  username: string;
-
-  @ApiProperty()
-  password: string;
-}
+import { LoginDto } from 'src/DTO';
 
 @ApiTags('login')
 @Controller('auth')

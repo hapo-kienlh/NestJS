@@ -22,11 +22,9 @@ import {
   ApiProperty,
   ApiTags,
 } from '@nestjs/swagger';
+import { payLoadDto } from 'src/DTO';
 
-class payLoadDto {
-  @ApiProperty()
-  id: number;
-}
+
 
 class payLoadCreateDto {
   @ApiProperty()
