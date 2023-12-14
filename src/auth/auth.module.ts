@@ -3,12 +3,11 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/users/user.entity';
-import { UserRepository } from 'src/users/user.repository';
 import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, UserRepository]),
+    TypeOrmModule.forFeature([User]),
     PassportModule.register({ defaultStrategy: 'google' }),
   ],
   controllers: [AuthController],

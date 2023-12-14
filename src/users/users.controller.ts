@@ -28,6 +28,17 @@ class payLoadDto {
   id: number;
 }
 
+class payLoadCreateDto {
+  @ApiProperty()
+  username: string;
+
+  @ApiProperty()
+  password: string;
+
+  @ApiProperty()
+  email: string;
+}
+
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
@@ -44,12 +55,21 @@ export class UsersController {
   }
 
   @Get(':id')
+  @ApiHeader({
+    name: 'Token',
+    required: true,
+  })
   getUserById(@Req() req: any, @Param('id') id: number): any {
     const currentUser = req.user;
     return this.usersService.findById(id, currentUser);
   }
 
   @Post('create')
+  @ApiHeader({
+    name: 'Token',
+    required: true,
+  })
+  @ApiBody({ type: payLoadCreateDto })
   create(
     @Body() body: { username: string; email: string; password: string },
   ): any {
@@ -68,7 +88,24 @@ export class UsersController {
   }
 
   @Post(':id/upload-image')
-  @UseInterceptors(FileInterceptor('image'))
+  @ApiHeader({
+    name: 'Token',
+    required: true,
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  // @UseInterceptors(FileInterceptor('image'))
   async uploadImage(
     @UploadedFile() image: any,
     @Param('id') id: number,

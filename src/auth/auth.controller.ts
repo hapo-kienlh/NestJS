@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBody, ApiProperty } from '@nestjs/swagger';
+import { ApiBody, ApiProperty, ApiTags } from '@nestjs/swagger';
 
 class LoginDto {
   @ApiProperty()
@@ -18,6 +18,7 @@ class LoginDto {
   password: string;
 }
 
+@ApiTags('login')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

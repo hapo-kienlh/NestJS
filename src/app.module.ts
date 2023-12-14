@@ -9,6 +9,9 @@ import { join } from 'path';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { AuthModule } from './auth/auth.module';
 import { ConfigurationModule } from './config/configuration.module';
+import { PostModule } from './post/post.module';
+import { User } from './users/user.entity';
+import { Post } from './post/post.entity';
 @Module({
   imports: [
     ConfigurationModule,
@@ -19,7 +22,8 @@ import { ConfigurationModule } from './config/configuration.module';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      entities: [User, Post],
+    //  entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
     ServeStaticModule.forRoot({
@@ -38,9 +42,11 @@ import { ConfigurationModule } from './config/configuration.module';
         from: process.env.MAILER_FROM,
       },
     }),
+    TypeOrmModule.forFeature([User, Post]),
     MulterConfigModule,
     AuthModule,
     UsersModule,
+    PostModule,
   ],
   controllers: [AppController],
   providers: [AppService],

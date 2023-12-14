@@ -1,15 +1,15 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/user.entity';
-import { UserRepository } from 'src/users/user.repository';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
-    private userRepository: UserRepository,
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async loginByUserName(body: any): Promise<any> {
@@ -19,13 +19,13 @@ export class AuthService {
       const user = await this.userRepository.findOne({ where: { username } });
 
       if (!user) {
-        return { status: HttpStatus.UNAUTHORIZED, msg: 'Username Failed' };
+        return { status: HttpStatus.UNAUTHORIZED, message: 'Username Failed' };
       }
 
       const passwordMatch = await bcrypt.compare(password, user.password);
 
       if (!passwordMatch) {
-        return { status: HttpStatus.UNAUTHORIZED, msg: 'Password Failed' };
+        return { status: HttpStatus.UNAUTHORIZED, message: 'Password Failed' };
       }
 
       const token = jwt.sign({ user }, process.env.PRIVATE_KEY_ACCESS_TOKEN, {
@@ -39,7 +39,10 @@ export class AuthService {
         message: 'Login Success',
       };
     } catch (error) {
-      return { status: HttpStatus.INTERNAL_SERVER_ERROR, msg: 'Login Failed' };
+      return {
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Login Failed',
+      };
     }
   }
 

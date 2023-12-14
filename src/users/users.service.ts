@@ -6,19 +6,22 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
-import { UserRepository } from './user.repository';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as bcrypt from 'bcrypt';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Readable } from 'stream';
 import * as papa from 'papaparse';
+import { Repository } from 'typeorm';
+import { Post } from 'src/post/post.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>,
     @InjectRepository(User)
-    private userRepository: UserRepository,
+    private readonly userRepository: Repository<User>,
     private mailerService: MailerService,
   ) {}
 
@@ -33,15 +36,18 @@ export class UsersService {
 
   async findById(id: any, currentUser: any): Promise<any> {
     try {
-      if (id != currentUser.id) {
+      if (id != currentUser.user.id) {
         return {
           message: 'Only change your information',
           status: HttpStatus.UNAUTHORIZED,
         };
       }
 
-      const listUser = await this.userRepository.findOne({ where: { id } });
-      return { current_user: currentUser, list_user: listUser };
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: ['posts'],
+      });
+      return { user: user };
     } catch (error) {
       throw new Error('Find User Failed');
     }
@@ -50,11 +56,12 @@ export class UsersService {
   async create(user: any): Promise<any> {
     try {
       const { username, password } = user;
+      console.log(user);
       const isUser = await this.userRepository.findOne({ where: { username } });
       if (isUser) {
         return {
           status: HttpStatus.CONFLICT,
-          msg: 'Username already exists',
+          message: 'Username already exists',
         };
       }
 
@@ -65,7 +72,7 @@ export class UsersService {
 
       return {
         status: HttpStatus.OK,
-        msg: 'Create User Success',
+        message: 'Create User Success',
       };
     } catch (error) {
       console.error('Error during user creation:', error);
@@ -76,19 +83,22 @@ export class UsersService {
   async delete(payload: any, currentUser: any): Promise<any> {
     try {
       const { id } = payload;
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: ['posts'],
+      });
 
-      const user = await this.userRepository.findOne({ where: { id } });
       if (!user) {
         return {
           status: HttpStatus.NOT_FOUND,
-          msg: 'User Not Found',
+          message: 'User Not Found',
         };
       }
 
       if (currentUser?.user?.id != user.id) {
         return {
           status: HttpStatus.FORBIDDEN,
-          msg: 'Only change your information',
+          message: 'Only change your information',
         };
       }
 
@@ -99,15 +109,19 @@ export class UsersService {
         fs.unlinkSync(existingAvatarPath);
       }
 
-      this.userRepository.delete(id);
+      await Promise.all(
+        user.posts.map((post) => this.postRepository.remove(post)),
+      );
+      await this.userRepository.remove(user);
+
       return {
         status: HttpStatus.OK,
-        msg: 'Delete User Success',
+        message: 'Delete User Success',
       };
     } catch (error) {
       return {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
-        msg: 'Delete Failed',
+        message: 'Delete Failed',
       };
     }
   }
@@ -120,14 +134,14 @@ export class UsersService {
       if (!user) {
         return {
           status: HttpStatus.NOT_FOUND,
-          msg: 'User Not Found',
+          message: 'User Not Found',
         };
       }
 
-      if (currentUser.id != user.id) {
+      if (currentUser.user.id != user.id) {
         return {
           status: HttpStatus.FORBIDDEN,
-          msg: 'Only change your information',
+          message: 'Only change your information',
         };
       }
       const { username, avatar } = user;
@@ -152,7 +166,7 @@ export class UsersService {
       fs.writeFileSync(filePath, image.buffer);
       return {
         status: HttpStatus.OK,
-        msg: 'Upload image success',
+        message: 'Upload image success',
       };
     } catch (error) {
       throw new Error('Upload Failed');
