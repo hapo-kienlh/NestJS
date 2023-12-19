@@ -34,8 +34,8 @@ export class AuthService {
 
       return {
         status: HttpStatus.OK,
-        access_token: token,
-        is_login: true,
+        accessToken: token,
+        isLogin: true,
         message: 'Login Success',
       };
     } catch (error) {
