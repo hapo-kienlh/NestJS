@@ -15,7 +15,7 @@ export class PostsService {
 
   async findAll(): Promise<any> {
     try {
-      const listPost = await this.postRepository.find();
+      const listPost = await this.postRepository.find({ relations: ['user'] });
       return { list_post: listPost };
     } catch (error) {
       throw new Error('Find Post Failed');
