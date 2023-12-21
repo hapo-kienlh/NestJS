@@ -218,30 +218,6 @@ export class UsersService {
         });
       });
 
-      // let header: string[] = [];
-      // const records: any[] = [];
-      // await new Promise<void>((resolve) => {
-      //   papa.parse(stream, {
-      //     header: true,
-      //     worker: true,
-      //     delimiter: ',',
-      //     step: function (row: any) {
-      //       if (!header.length) {
-      //         header = Object.keys(row.data);
-      //       } else {
-      //         const record: any = {};
-      //         header.forEach((key) => {
-      //           record[key] = row.data[key];
-      //         });
-      //         records.push(record);
-      //       }
-      //     },
-      //     complete: function () {
-      //       resolve();
-      //     },
-      //   });
-      // });
-
       const username = userData.username;
 
       const isUser = await this.userRepository.findOne({ where: { username } });
