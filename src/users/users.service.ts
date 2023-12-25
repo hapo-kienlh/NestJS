@@ -34,14 +34,9 @@ export class UsersService {
     }
   }
 
-  async findById(id: any, currentUser: any): Promise<any> {
+  async findById(currentUser: any): Promise<any> {
     try {
-      if (id != currentUser.user.id) {
-        return {
-          message: 'Only change your information',
-          status: HttpStatus.UNAUTHORIZED,
-        };
-      }
+      const { id } = currentUser.user;
 
       const user = await this.userRepository.findOne({
         where: { id },
@@ -56,7 +51,6 @@ export class UsersService {
   async create(user: any): Promise<any> {
     try {
       const { username, password } = user;
-      console.log(user);
       const isUser = await this.userRepository.findOne({ where: { username } });
       if (isUser) {
         return {
@@ -126,8 +120,9 @@ export class UsersService {
     }
   }
 
-  async uploadImage(id: number, image: any, currentUser: any): Promise<any> {
+  async uploadImage(image: any, currentUser: any): Promise<any> {
     try {
+      const { id } = currentUser.user;
       const uploadDir = path.join(__dirname, '../../', 'avatars');
 
       const user = await this.userRepository.findOne({ where: { id } });

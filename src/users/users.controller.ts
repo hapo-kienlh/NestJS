@@ -24,8 +24,6 @@ import {
 } from '@nestjs/swagger';
 import { payLoadDto } from 'src/DTO';
 
-
-
 class payLoadCreateDto {
   @ApiProperty()
   username: string;
@@ -52,14 +50,14 @@ export class UsersController {
     return this.usersService.findAll(user);
   }
 
-  @Get(':id')
+  @Get('detail')
   @ApiHeader({
     name: 'Token',
     required: true,
   })
-  getUserById(@Req() req: any, @Param('id') id: number): any {
+  getUserById(@Req() req: any): any {
     const currentUser = req.user;
-    return this.usersService.findById(id, currentUser);
+    return this.usersService.findById(currentUser);
   }
 
   @Post('create')
@@ -106,11 +104,10 @@ export class UsersController {
   // @UseInterceptors(FileInterceptor('image'))
   async uploadImage(
     @UploadedFile() image: any,
-    @Param('id') id: number,
     @Req() req,
   ): Promise<any> {
     const currentUser = req.user;
-    return this.usersService.uploadImage(id, image, currentUser);
+    return this.usersService.uploadImage( image, currentUser);
   }
 
   @Post('send-email')
