@@ -83,7 +83,7 @@ export class UsersController {
     return this.usersService.delete(body, currentUser);
   }
 
-  @Post(':id/upload-image')
+  @Post('upload-image')
   @ApiHeader({
     name: 'Token',
     required: true,
@@ -101,7 +101,6 @@ export class UsersController {
     },
   })
   @UseInterceptors(FileInterceptor('file'))
-  // @UseInterceptors(FileInterceptor('image'))
   async uploadImage(
     @UploadedFile() image: any,
     @Req() req,
