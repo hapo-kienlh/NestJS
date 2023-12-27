@@ -15,8 +15,35 @@ export class PostsService {
 
   async findAll(): Promise<any> {
     try {
-      const listPost = await this.postRepository.find({ relations: ['user'] });
-      return { list_post: listPost };
+
+      const postsWithComments = await this.postRepository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.user', 'user') // Load thông tin người dùng của bài đăng
+        .leftJoinAndSelect('post.comments', 'comment') // Load thông tin của các comment
+        .leftJoinAndSelect('comment.user', 'commentUser') // Load thông tin người dùng của từng comment
+        .getMany();
+
+      // Chỉ trả về các trường cần thiết
+      const formattedPosts = postsWithComments.map((post) => ({
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        user: {
+          id: post.user.id,
+          username: post.user.username,
+          avatar: post.user.avatar,
+        },
+        comments: post.comments.map((comment) => ({
+          id: comment.id,
+          content: comment.content,
+          user: {
+            id: comment.user.id,
+            username: comment.user.username,
+            avatar: comment.user.avatar,
+          },
+        })),
+      }));
+      return { list_post: formattedPosts };
     } catch (error) {
       throw new Error('Find Post Failed');
     }
