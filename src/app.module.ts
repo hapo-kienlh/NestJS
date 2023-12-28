@@ -12,6 +12,8 @@ import { ConfigurationModule } from './config/configuration.module';
 import { PostModule } from './post/post.module';
 import { User } from './users/user.entity';
 import { Post } from './post/post.entity';
+import { Comment } from './comment/comment.entity';
+import { CommentModule } from './comment/comment.module';
 @Module({
   imports: [
     ConfigurationModule,
@@ -22,8 +24,8 @@ import { Post } from './post/post.entity';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      entities: [User, Post],
-    //  entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      entities: [User, Post, Comment],
+      //  entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
     ServeStaticModule.forRoot({
@@ -47,6 +49,7 @@ import { Post } from './post/post.entity';
     AuthModule,
     UsersModule,
     PostModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
