@@ -15,7 +15,6 @@ export class AuthMiddleware implements NestMiddleware {
   async use(req: any, res: Response, next: NextFunction) {
     try {
       const accessToken = req.headers['token'];
-
       if (!accessToken) {
         throw new UnauthorizedException('Access token is missing');
       }

@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,12 +13,15 @@ import { AuthService } from 'src/auth/auth.service';
 import { Post } from 'src/post/post.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User,Post])],
+  imports: [TypeOrmModule.forFeature([User, Post])],
   controllers: [UsersController],
-  providers: [UsersService, AuthService ],
+  providers: [UsersService, AuthService],
 })
 export class UsersModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthMiddleware).forRoutes('users');
+    consumer
+      .apply(AuthMiddleware)
+      .exclude({ path: 'users/create', method: RequestMethod.ALL })
+      .forRoutes('users');
   }
 }
