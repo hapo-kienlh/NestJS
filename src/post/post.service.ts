@@ -1,8 +1,9 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from './post.entity';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/user.entity';
+import { Reaction } from './post.reaction.entity';
 
 @Injectable()
 export class PostsService {
@@ -11,20 +12,56 @@ export class PostsService {
     private readonly postRepository: Repository<Post>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Reaction)
+    private readonly reactionRepository: Repository<Reaction>,
   ) {}
+
+  // async findAll(): Promise<any> {
+  //   try {
+  //     const postsWithComments = await this.postRepository
+  //       .createQueryBuilder('post')
+  //       .leftJoinAndSelect('post.user', 'user') // Load thông tin người dùng của bài đăng
+  //       .leftJoinAndSelect('post.comments', 'comment') // Load thông tin của các comment
+  //       .leftJoinAndSelect('comment.user', 'commentUser') // Load thông tin người dùng của từng comment
+  //       .getMany();
+
+  //     // Chỉ trả về các trường cần thiết
+  //     const formattedPosts = postsWithComments.map((post) => ({
+  //       id: post.id,
+  //       title: post.title,
+  //       content: post.content,
+  //       user: {
+  //         id: post.user.id,
+  //         username: post.user.username,
+  //         avatar: post.user.avatar,
+  //       },
+  //       comments: post.comments.map((comment) => ({
+  //         id: comment.id,
+  //         content: comment.content,
+  //         user: {
+  //           id: comment.user.id,
+  //           username: comment.user.username,
+  //           avatar: comment.user.avatar,
+  //         },
+  //       })),
+  //     }));
+  //     return { list_post: formattedPosts };
+  //   } catch (error) {
+  //     throw new Error('Find Post Failed');
+  //   }
+  // }
 
   async findAll(): Promise<any> {
     try {
-
-      const postsWithComments = await this.postRepository
+      const postsWithCommentsAndReactions = await this.postRepository
         .createQueryBuilder('post')
-        .leftJoinAndSelect('post.user', 'user') // Load thông tin người dùng của bài đăng
-        .leftJoinAndSelect('post.comments', 'comment') // Load thông tin của các comment
-        .leftJoinAndSelect('comment.user', 'commentUser') // Load thông tin người dùng của từng comment
+        .leftJoinAndSelect('post.user', 'user')
+        .leftJoinAndSelect('post.comments', 'comment')
+        .leftJoinAndSelect('comment.user', 'commentUser')
+        .leftJoinAndSelect('post.reactions', 'reaction')
         .getMany();
 
-      // Chỉ trả về các trường cần thiết
-      const formattedPosts = postsWithComments.map((post) => ({
+      const formattedPosts = postsWithCommentsAndReactions.map((post) => ({
         id: post.id,
         title: post.title,
         content: post.content,
@@ -42,7 +79,12 @@ export class PostsService {
             avatar: comment.user.avatar,
           },
         })),
+        reactions: post.reactions.map((reaction) => ({
+          id: reaction.id,
+          type: reaction.type,
+        })),
       }));
+
       return { list_post: formattedPosts };
     } catch (error) {
       throw new Error('Find Post Failed');
@@ -99,5 +141,44 @@ export class PostsService {
       relations: ['user'],
     });
     return { post };
+  }
+
+  async addReactionToPost(
+    dataCurrentUser: any,
+    postId: any,
+    type: any,
+  ): Promise<Post> {
+    const userId = dataCurrentUser?.user?.id;
+    const post = await this.postRepository.findOne({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    let existingReaction = await this.reactionRepository.findOne({
+      where: { post, user },
+    });
+
+    if (!existingReaction) {
+      existingReaction = new Reaction();
+      existingReaction.type = type;
+      existingReaction.post = post;
+      existingReaction.user = user;
+    } else {
+      existingReaction.type = type;
+    }
+
+    await this.reactionRepository.save(existingReaction);
+    return this.postRepository.save(post);
   }
 }
