@@ -44,4 +44,14 @@ export class PostController {
   getPostById(@Param('id') id: number): any {
     return this.postService.findById(id);
   }
+
+  @Get('reaction/:postId/:type')
+  addReactionToPost(
+    @Req() req: any,
+    @Param('postId') postId: any,
+    @Param('type') type: any,
+  ) {
+    const dataCurrentUser = req.user;
+    return this.postService.addReactionToPost(dataCurrentUser, postId, type);
+  }
 }
