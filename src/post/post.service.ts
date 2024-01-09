@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from './post.entity';
-import { Repository } from 'typeorm';
+import { Any, Repository } from 'typeorm';
 import { User } from 'src/users/user.entity';
 import { Reaction } from './post.reaction.entity';
 
@@ -15,41 +15,6 @@ export class PostsService {
     @InjectRepository(Reaction)
     private readonly reactionRepository: Repository<Reaction>,
   ) {}
-
-  // async findAll(): Promise<any> {
-  //   try {
-  //     const postsWithComments = await this.postRepository
-  //       .createQueryBuilder('post')
-  //       .leftJoinAndSelect('post.user', 'user') // Load thông tin người dùng của bài đăng
-  //       .leftJoinAndSelect('post.comments', 'comment') // Load thông tin của các comment
-  //       .leftJoinAndSelect('comment.user', 'commentUser') // Load thông tin người dùng của từng comment
-  //       .getMany();
-
-  //     // Chỉ trả về các trường cần thiết
-  //     const formattedPosts = postsWithComments.map((post) => ({
-  //       id: post.id,
-  //       title: post.title,
-  //       content: post.content,
-  //       user: {
-  //         id: post.user.id,
-  //         username: post.user.username,
-  //         avatar: post.user.avatar,
-  //       },
-  //       comments: post.comments.map((comment) => ({
-  //         id: comment.id,
-  //         content: comment.content,
-  //         user: {
-  //           id: comment.user.id,
-  //           username: comment.user.username,
-  //           avatar: comment.user.avatar,
-  //         },
-  //       })),
-  //     }));
-  //     return { list_post: formattedPosts };
-  //   } catch (error) {
-  //     throw new Error('Find Post Failed');
-  //   }
-  // }
 
   async findAll(): Promise<any> {
     try {
@@ -65,6 +30,7 @@ export class PostsService {
         id: post.id,
         title: post.title,
         content: post.content,
+        time: post.created_at,
         user: {
           id: post.user.id,
           username: post.user.username,
@@ -73,6 +39,7 @@ export class PostsService {
         comments: post.comments.map((comment) => ({
           id: comment.id,
           content: comment.content,
+          time: comment.created_at,
           user: {
             id: comment.user.id,
             username: comment.user.username,
@@ -83,6 +50,7 @@ export class PostsService {
           id: reaction.id,
           type: reaction.type,
         })),
+        reactionsCount: calculateReactionsCount(post.reactions),
       }));
 
       return { list_post: formattedPosts };
@@ -166,7 +134,10 @@ export class PostsService {
     }
 
     let existingReaction = await this.reactionRepository.findOne({
-      where: { post, user },
+      where: {
+        userId,
+        post: { id: postId },
+      },
     });
 
     if (!existingReaction) {
@@ -181,4 +152,14 @@ export class PostsService {
     await this.reactionRepository.save(existingReaction);
     return this.postRepository.save(post);
   }
+}
+
+function calculateReactionsCount(reactions) {
+  const reactionsCount = {};
+
+  reactions.forEach((reaction) => {
+    reactionsCount[reaction.type] = (reactionsCount[reaction.type] || 0) + 1;
+  });
+
+  return reactionsCount;
 }

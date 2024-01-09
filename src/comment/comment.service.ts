@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Comment } from './comment.entity';
@@ -16,7 +16,7 @@ export class CommentService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async createComment(payload: any, dataCurrentUser: any): Promise<Comment> {
+  async createComment(payload: any, dataCurrentUser: any): Promise<any> {
     const userId = dataCurrentUser?.user.id;
     const { postId, content } = payload;
     const user = await this.userRepository.findOne({
@@ -32,7 +32,10 @@ export class CommentService {
     comment.user = user;
     comment.post = post;
 
-    const createdComment = await this.commentRepository.save(comment);
-    return createdComment;
+    await this.commentRepository.save(comment);
+    return {
+      status: HttpStatus.OK,
+      message: 'Create Comment Success',
+    };
   }
 }

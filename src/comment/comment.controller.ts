@@ -15,10 +15,6 @@ export class CommentController {
   @ApiBody({ type: CommentDto })
   async createComment(@Body() payload: string, @Req() req: any) {
     const dataCurrentUser = req.user;
-    const createdComment = await this.commentService.createComment(
-      payload,
-      dataCurrentUser,
-    );
-    return createdComment;
+    await this.commentService.createComment(payload, dataCurrentUser);
   }
 }
