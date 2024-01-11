@@ -14,6 +14,7 @@ import { Readable } from 'stream';
 import * as papa from 'papaparse';
 import { Repository } from 'typeorm';
 import { Post } from 'src/post/post.entity';
+import { Friendship } from './friendship.entity';
 
 @Injectable()
 export class UsersService {
@@ -23,12 +24,20 @@ export class UsersService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private mailerService: MailerService,
+    @InjectRepository(Friendship)
+    private friendshipRepository: Repository<Friendship>,
   ) {}
 
-  async findAll(user: any): Promise<any> {
+  async findAll(currentUser: any): Promise<any> {
     try {
+      const { id } = currentUser.user;
+      const user = await this.userRepository.findOne({ where: { id: id } });
+
       const listUser = await this.userRepository.find();
-      return { current_user: user, list_user: listUser };
+      return {
+        current_user: user,
+        list_user: listUser,
+      };
     } catch (error) {
       throw new Error('Find User Failed');
     }
@@ -42,7 +51,18 @@ export class UsersService {
         where: { id },
         relations: ['posts'],
       });
-      return { user: user };
+
+      const confirmFriends = await this.friendshipRepository.find({
+        where: { user: currentUser.user, confirmed: false },
+        relations: ['friend'],
+      });
+
+      const friends = await this.friendshipRepository.find({
+        where: { user: currentUser.user, confirmed: true },
+        relations: ['friend'],
+      });
+
+      return { user, confirm_friends: confirmFriends, friends };
     } catch (error) {
       throw new Error('Find User Failed');
     }
@@ -227,5 +247,70 @@ export class UsersService {
     } catch (error) {
       console.error('Error processing CSV: ', error);
     }
+  }
+
+  // Friend
+  async addFriend(payload: any, currentUser: any): Promise<any> {
+    const { id } = currentUser.user;
+    const { friendId } = payload;
+
+    const user = await this.userRepository.findOne({ where: { id: id } });
+    const friend = await this.userRepository.findOne({
+      where: { id: friendId },
+    });
+
+    if (id == friendId) {
+      throw new Error('Add friend error');
+    }
+
+    if (!user || !friend) {
+      throw new Error('User or friend not found');
+    }
+    const existingFriendship = await this.friendshipRepository.findOne({
+      where: [
+        { user, friend },
+        { user: friend, friend: user },
+      ],
+    });
+
+    if (existingFriendship) {
+      throw new Error('Friendship request already sent');
+    }
+
+    const newFriendship = this.friendshipRepository.create({
+      user,
+      friend,
+      confirmed: false,
+    });
+
+    await this.friendshipRepository.save(newFriendship);
+    return {
+      status: HttpStatus.OK,
+      message: 'Send add friend success',
+    };
+  }
+
+  async confirmAddFriend(payload: any, currentUser: any): Promise<any> {
+    try {
+      const { id } = currentUser.user;
+      const { idFriendConfirm } = payload;
+
+      const user = await this.userRepository.findOne({ where: { id: id } });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const friendship = await this.friendshipRepository.findOne({
+        where: { id: idFriendConfirm },
+      });
+
+      if (!friendship) {
+        throw new Error('Friendship request not found or already confirmed');
+      }
+
+      friendship.confirmed = true;
+      await this.friendshipRepository.save(friendship);
+    } catch (error) {}
   }
 }
