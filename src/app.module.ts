@@ -27,6 +27,9 @@ import { CommentModule } from './comment/comment.module';
       entities: [User, Post, Comment],
       //  entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
+      extra: {
+        allowOldPasswords: true,
+      },
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'avatars'),
