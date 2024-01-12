@@ -27,13 +27,7 @@ import { Friendship } from './users/friendship.entity';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       entities: [User, Post, Comment, Reaction, Friendship],
-      //  entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
-      extra: {
-        authPlugins: {
-          mysql_clear_password: 'mysql_clear_password',
-        },
-      },
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'avatars'),

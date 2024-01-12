@@ -23,6 +23,7 @@ export class UsersModule implements NestModule {
     consumer
       .apply(AuthMiddleware)
       .exclude({ path: 'users/create', method: RequestMethod.ALL })
+      .exclude({ path: 'users/create/from-csv', method: RequestMethod.ALL })
       .forRoutes('users');
   }
 }
