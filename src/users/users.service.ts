@@ -160,7 +160,7 @@ export class UsersService {
         };
       }
       const { username, avatar } = user;
-      const baseUrl = 'http://localhost:3000/avatars/';
+      const baseUrl = 'https://social-media-65nx.onrender.com/avatars/';
 
       if (avatar) {
         const existingAvatarPath = path.join(uploadDir, path.basename(avatar));
