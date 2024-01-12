@@ -28,7 +28,9 @@ import { CommentModule } from './comment/comment.module';
       //  entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
       extra: {
-        allowOldPasswords: true,
+        authPlugins: {
+          mysql_clear_password: 'mysql_clear_password',
+        },
       },
     }),
     ServeStaticModule.forRoot({
